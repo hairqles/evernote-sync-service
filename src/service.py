@@ -55,6 +55,7 @@ def get_auth_token():
         return jsonify(error="missing user_id")
 
     request_token = cache.get(user_id)
+    cache.delete(user_id)
     app.logger.debug('authenticate - user_id: {0} request_token: {1}'.format(user_id, request_token))
 
     client = EvernoteClient(
