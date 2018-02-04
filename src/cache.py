@@ -8,4 +8,4 @@ class Cache:
         return self.data[user_id]
 
     def delete(self, user_id):
-        del data[user_id]
+        del self.data[user_id]

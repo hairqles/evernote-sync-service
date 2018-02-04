@@ -1,11 +1,14 @@
 from evernote.api.client import EvernoteClient
 from evernote.edam.notestore.ttypes import NoteFilter
+from evernote.edam.notestore.ttypes import NotesMetadataResultSpec
 import evernote.edam.type.ttypes as Types
 from flask import Flask
 from flask import request
 from flask import jsonify
+from flask import Response
 from cache import Cache
 import os
+import json
 
 key = os.environ.get('EVERNOTE_CONSUMER_KEY', None)
 if not key:
@@ -38,10 +41,11 @@ def get_authorize_url():
         sandbox=True
     )
     
-    request_token = client.get_request_token(callback)
-    cache.set(user_id, request_token)
-    app.logger.debug('authorize - user_id: {0} request_token: {1}'.format(user_id, request_token))
-    url = client.get_authorize_url(request_token)
+    token = client.get_request_token(callback)
+    cache.set(user_id, token)
+    app.logger.debug('authorize - user_id: {0} token: {1}'.format(user_id, token))
+    app.logger.debug('authorize - cache: {0}'.format(cache.data))
+    url = client.get_authorize_url(token)
     return jsonify(authorize_url=url)
 
 @app.route('/authenticate')
@@ -53,10 +57,11 @@ def get_auth_token():
     user_id = request.args.get('user_id')
     if not user_id:
         return jsonify(error="missing user_id")
-
-    request_token = cache.get(user_id)
+    
+    app.logger.debug('authenticate - cache: {0}'.format(cache.data))
+    token = cache.get(user_id)
+    app.logger.debug('authenticate - user_id: {0} token: {1}'.format(user_id, token))
     cache.delete(user_id)
-    app.logger.debug('authenticate - user_id: {0} request_token: {1}'.format(user_id, request_token))
 
     client = EvernoteClient(
         consumer_key=key,
@@ -65,8 +70,8 @@ def get_auth_token():
     )
 
     auth_token = client.get_access_token(
-        request_token['oauth_token'],
-        request_token['oauth_token_secret'],
+        token['oauth_token'],
+        token['oauth_token_secret'],
         oauth_verifier
     )
     return jsonify(auth_token=auth_token)
@@ -75,12 +80,13 @@ def get_auth_token():
 def get_notebooks():
     auth_token = request.args.get('auth_token')
     if not auth_token:
-        return
-
+        return jsonify(error="missing auth_token")
+    
     client = EvernoteClient(token=auth_token)
     note_store = client.get_note_store()
     notebooks = note_store.listNotebooks()
-    return notebooks
+    app.logger.debug('notebooks - {0} {1}'.format(type(notebooks), notebooks))
+    return Response(json.dumps(notebooks),  mimetype='application/json')
 
 @app.route('/notes')
 def get_notes():
@@ -94,7 +100,11 @@ def get_notes():
 
     client = EvernoteClient(token=auth_token)
     note_store = client.get_note_store()
-
-    filter = NoteFilter(order=NoteSortOrder.UPDATED, notebookGuid=notebook)
-    notes = note_store.findNotesMetadata(auth_token, filter)
-    return notes
+    
+    offset = 0
+    max_notes = 1000
+    filter = NoteFilter(order=Types.NoteSortOrder.UPDATED, notebookGuid=notebook)
+    result_spec = NotesMetadataResultSpec(includeTitle=True)
+    notes = note_store.findNotesMetadata(auth_token, filter, offset, max_notes, result_spec)
+    app.logger.debug('notes - {0} {1}'.format(type(notes), notes))
+    return  Response(json.dumps(notes),  mimetype='application/json')
