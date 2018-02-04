@@ -26,11 +26,11 @@ def ping():
 def get_authorize_url():
     callback = request.args.get('callback')
     if not callback:
-        return
+        return jsonify(error="missing callback")
 
     user_id = request.args.get('user_id')
     if not user_id:
-        return
+        return jsonify(error="missing user_id")
 
     client = EvernoteClient(
         consumer_key=key,
@@ -40,6 +40,7 @@ def get_authorize_url():
     
     request_token = client.get_request_token(callback)
     cache.set(user_id, request)
+    app.logger.debug('authorize - user_id: {0} request_token: {1}'.format(user_id, request_token))
     url = client.get_authorize_url(request_token)
     return jsonify(authorize_url=url)
 
@@ -47,14 +48,14 @@ def get_authorize_url():
 def get_auth_token():
     oauth_verifier = request.args.get('oauth_verifier')
     if not oauth_verifier:
-        return
+        return jsonify(error="missing oauth_verifier")
 
     user_id = request.args.get('user_id')
     if not user_id:
-        return
+        return jsonify(error="missing user_id")
 
     request_token = cache.get(user_id)
-    app.logger.debug('get_auth_token - user_id: {0} request_token: {1}'.format(user_id, request_token))
+    app.logger.debug('authenticate - user_id: {0} request_token: {1}'.format(user_id, request_token))
 
     client = EvernoteClient(
         consumer_key=key,
