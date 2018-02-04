@@ -39,7 +39,7 @@ def get_authorize_url():
     )
     
     request_token = client.get_request_token(callback)
-    cache.set(user_id, request)
+    cache.set(user_id, request_token)
     app.logger.debug('authorize - user_id: {0} request_token: {1}'.format(user_id, request_token))
     url = client.get_authorize_url(request_token)
     return jsonify(authorize_url=url)
