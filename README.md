@@ -19,7 +19,7 @@ OAUTH
 }
 ```
 
-2. Redirect the user to $authorize_url. After the user authorized your application, Evernote will redirect the user to *$your-callback-url/oauth_token=$oauth_token=false*
+2. Redirect the user to $authorize_url. After the user authorized your application, Evernote will redirect the user back to $your-callback-url/oauth_token=$oauth_token=false
 
 3. Parse $oauth_token and send a GET request to *localhost:5000/authenticate?oauth_verifier=$oauth_token*
 ```
@@ -28,4 +28,4 @@ OAUTH
 }
 ```
 
-4. Save the $auth_token somewhere.
+4. Save the $auth_token.
