@@ -7,7 +7,7 @@ The project contains a lightweight python service running in a Docker container,
 Usage
 -----
 ```
-docker run -e "EVERNOTE_CONSUMER_KEY=$EVERNOTE_CONSUMER_KEY" -e "EVERNOTE_CONSUMER_SECRET=$EVERNOTE_CONSUMER_SECRET" hairqles/evernote-sync-service
+docker run -e "EVERNOTE_CONSUMER_KEY=$EVERNOTE_CONSUMER_KEY" -e "EVERNOTE_CONSUMER_SECRET=$EVERNOTE_CONSUMER_SECRET" -p 5000:5000 hairqles/evernote-sync-service
 ```
 
 OAUTH
