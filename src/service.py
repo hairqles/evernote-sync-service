@@ -85,8 +85,14 @@ def get_notebooks():
     client = EvernoteClient(token=auth_token)
     note_store = client.get_note_store()
     notebooks = note_store.listNotebooks()
-    app.logger.debug('notebooks - {0} {1}'.format(type(notebooks), notebooks))
-    return Response(json.dumps(notebooks),  mimetype='application/json')
+    app.logger.debug('notebooks - {0}'.format(notebooks))
+    
+    resp = []
+    for n in notebooks:
+        resp.append({'guid': n.guid, 'name':n.name})
+    app.logger.debug('resp - {0}'.format(resp))
+    
+    return jsonify(notebooks=resp)
 
 @app.route('/notes')
 def get_notes():
@@ -105,6 +111,11 @@ def get_notes():
     max_notes = 1000
     filter = NoteFilter(order=Types.NoteSortOrder.UPDATED, notebookGuid=notebook)
     result_spec = NotesMetadataResultSpec(includeTitle=True)
-    notes = note_store.findNotesMetadata(auth_token, filter, offset, max_notes, result_spec)
-    app.logger.debug('notes - {0} {1}'.format(type(notes), notes))
-    return  Response(json.dumps(notes),  mimetype='application/json')
+    metadata = note_store.findNotesMetadata(auth_token, filter, offset, max_notes, result_spec)
+    
+    notes = []
+    for n in metadata.notes:
+        content = note_store.getNoteContent(auth_token, n.guid)
+        notes.append({'guid': n.guid, 'content': content, 'title': n.title})
+
+    return jsonify(notes=notes)
