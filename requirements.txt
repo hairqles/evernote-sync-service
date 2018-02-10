@@ -1,3 +1,6 @@
 Flask
 oauth2
 evernote
+beautifulsoup4
+html2text
+git+git://github.com/CarlLee/ENML_PY.git#egg=ENML2HTML

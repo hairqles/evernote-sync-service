@@ -7,6 +7,7 @@ from flask import request
 from flask import jsonify
 from flask import Response
 from cache import Cache
+from parser import ENMLToHTML
 import os
 import json
 
@@ -116,6 +117,6 @@ def get_notes():
     notes = []
     for n in metadata.notes:
         content = note_store.getNoteContent(auth_token, n.guid)
-        notes.append({'guid': n.guid, 'content': content, 'title': n.title})
+        notes.append({'guid': n.guid, 'content': unicode(ENMLToHTML(content)), 'title': n.title})
 
     return jsonify(notes=notes)
